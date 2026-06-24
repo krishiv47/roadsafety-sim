@@ -1,0 +1,1 @@
+# Place yolov8s.pt here — download from: https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8s.pt

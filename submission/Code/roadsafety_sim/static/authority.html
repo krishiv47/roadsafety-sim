@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Authority Command Center</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#070d1a;color:#e2e8f0;
+     min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0a1628}
+::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
+
+/* ══ HEADER ════════════════════════════════════════════════ */
+.hdr{height:56px;background:#0a1628;border-bottom:1px solid #1a2f4a;
+     display:flex;align-items:center;padding:0 18px;gap:12px;
+     position:sticky;top:0;z-index:200;flex-shrink:0}
+.hdr-logo{font-size:22px}
+.hdr-brand{font-size:.95rem;font-weight:800;color:#f1f5f9;white-space:nowrap}
+.hdr-sep{width:1px;height:22px;background:#1a2f4a;margin:0 2px}
+.tabs{display:flex;gap:3px;overflow-x:auto;flex:1}
+.tabs::-webkit-scrollbar{height:0}
+.tab{padding:5px 13px;border-radius:8px;border:1px solid transparent;background:transparent;
+     color:#5a7a99;cursor:pointer;font-size:.78rem;font-weight:700;
+     white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px}
+.tab:hover{background:#0f1929;color:#c8d8e8}
+.tab.on{background:color-mix(in srgb,var(--c) 18%,#0a1628);
+        color:var(--c);border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+.hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:#334155;transition:background .3s}
+.ws-dot.ok{background:#22c55e;animation:pulse 2s infinite}
+.ws-dot.err{background:#ef4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.live-chip{display:flex;align-items:center;gap:5px;background:#052e16;
+           border:1px solid #166534;border-radius:99px;padding:3px 10px;
+           font-size:.7rem;color:#4ade80;font-weight:700}
+.back-a{color:#5a7a99;font-size:.75rem;text-decoration:none;padding:4px 10px;
+        border:1px solid #1a2f4a;border-radius:7px;transition:all .15s}
+.back-a:hover{color:#38bdf8;border-color:#38bdf8}
+
+/* ══ STATS BAR ══════════════════════════════════════════════ */
+.stats-bar{display:flex;gap:8px;padding:10px 18px;background:#070d1a;
+           border-bottom:1px solid #1a2f4a;flex-wrap:wrap;flex-shrink:0}
+.sb{background:#0c1a2e;border:1px solid #1a2f4a;border-radius:10px;
+    padding:9px 14px;min-width:90px;flex:1;max-width:180px}
+.sb-v{font-size:1.5rem;font-weight:800;line-height:1}
+.sb-l{font-size:.62rem;color:#475569;font-weight:700;text-transform:uppercase;
+      letter-spacing:.04em;margin-top:2px}
+.c-total{color:#94a3b8}.c-new{color:#f59e0b}.c-prog{color:#818cf8}
+.c-done{color:#34d399}.c-crit{color:#ef4444}.c-emg{color:#f87171}
+
+/* ══ FILTER BAR ═════════════════════════════════════════════ */
+.filter-bar{display:flex;align-items:center;gap:6px;padding:7px 18px;
+            background:#070d1a;border-bottom:1px solid #1a2f4a;
+            flex-wrap:wrap;flex-shrink:0}
+.fb-lbl{font-size:.68rem;color:#334155;font-weight:700;text-transform:uppercase}
+.fb{padding:3px 10px;border-radius:99px;border:1px solid #1a2f4a;
+    background:transparent;color:#5a7a99;cursor:pointer;font-size:.7rem;
+    font-weight:700;transition:all .12s}
+.fb.on,.fb:hover{border-color:#38bdf8;color:#38bdf8}
+.sort-sel{padding:3px 8px;border-radius:7px;border:1px solid #1a2f4a;
+          background:#0c1a2e;color:#94a3b8;font-size:.7rem;outline:none;cursor:pointer}
+.srch{margin-left:auto;padding:5px 11px;border-radius:8px;border:1px solid #1a2f4a;
+      background:#0c1a2e;color:#e2e8f0;font-size:.75rem;outline:none;width:190px}
+.srch:focus{border-color:#38bdf8}
+.ev-count{font-size:.68rem;color:#334155;white-space:nowrap}
+
+/* ══ BODY ═══════════════════════════════════════════════════ */
+.body-wrap{display:flex;height:calc(100vh - 56px - 45px - 53px - 38px);overflow:hidden}
+
+/* ══ EVENT LIST ═════════════════════════════════════════════ */
+.ev-list{flex:1;overflow-y:auto;padding:10px 18px 20px;
+         display:flex;flex-direction:column;gap:7px}
+
+/* row card */
+.erow{background:#0c1a2e;border:1px solid #1a2f4a;border-radius:11px;
+      padding:11px 13px;cursor:pointer;transition:all .15s;
+      display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;
+      position:relative;overflow:hidden}
+.erow::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.erow.sc::before{background:#ef4444}.erow.sh::before{background:#f97316}
+.erow.sm::before{background:#f59e0b}.erow.sl::before{background:#22c55e}
+.erow:hover{border-color:#2a4a70;background:#0e1e36}
+.erow.sel{border-color:#38bdf8!important;background:#071e36}
+.row-ico{font-size:1.35rem;text-align:center;line-height:1;padding-top:2px}
+.row-body{display:flex;flex-direction:column;gap:5px;min-width:0}
+.row-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.row-type{font-size:.86rem;font-weight:800;color:#f1f5f9;text-transform:capitalize}
+.row-id{font-size:.65rem;color:#334155;font-family:monospace}
+.row-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rm{font-size:.7rem;color:#5a7a99}
+.rm b{color:#94a3b8;font-weight:600}
+.row-assigns{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.ac{font-size:.62rem;padding:2px 7px;border-radius:5px;font-weight:700}
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+
+/* badges */
+.bsev{font-size:.63rem;font-weight:800;padding:2px 7px;border-radius:99px;text-transform:uppercase}
+.bsev.sc{background:#450a0a;color:#fca5a5}
+.bsev.sh{background:#431407;color:#fdba74}
+.bsev.sm{background:#3d2000;color:#fcd34d}
+.bsev.sl{background:#052e16;color:#86efac}
+.bpri{font-size:.63rem;font-weight:800;padding:2px 7px;border-radius:6px;text-transform:uppercase}
+.bp1{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+.bp2{background:#431407;color:#fdba74;border:1px solid #7c2d12}
+.bp3{background:#3d2000;color:#fde68a;border:1px solid #78350f}
+.bp4{background:#052e16;color:#86efac;border:1px solid #14532d}
+.bst{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:99px}
+.bst.s-unassigned{background:#1a2f4a;color:#5a7a99}
+.bst.s-new{background:#3d2000;color:#fbbf24}
+.bst.s-acknowledged{background:#0c2040;color:#60a5fa}
+.bst.s-in_progress{background:#1e0d4e;color:#c4b5fd}
+.bst.s-completed{background:#052e16;color:#4ade80}
+.bvf{font-size:.62rem;padding:1px 6px;border-radius:99px;font-weight:600}
+.bvf.fully_verified{background:#052e16;color:#4ade80}
+.bvf.partially_verified{background:#1e1b4b;color:#a5b4fc}
+.bvf.unverified{background:#1c1917;color:#78716c}
+.bemg{font-size:.62rem;padding:2px 7px;border-radius:99px;font-weight:800;
+      background:#450a0a;color:#fca5a5;animation:pulse 1.5s infinite}
+
+/* kanban */
+.kanban{flex:1;display:none;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:10px 18px 20px;overflow:hidden}
+.kcol{display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.kchdr{padding:7px 11px;border-radius:8px;font-size:.75rem;font-weight:800;
+       text-transform:uppercase;letter-spacing:.05em;
+       display:flex;align-items:center;justify-content:space-between}
+.kc-new .kchdr{background:#1a0f00;color:#fbbf24;border:1px solid #7c3c00}
+.kc-prog .kchdr{background:#0f0730;color:#c4b5fd;border:1px solid #4c1d95}
+.kc-done>.kchdr{background:#011910;color:#6ee7b7;border:1px solid #065f46}
+.kcnt{background:rgba(255,255,255,.1);border-radius:99px;padding:1px 9px}
+.kbody{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding-right:3px}
+.kcard{background:#0c1a2e;border:1px solid #1a2f4a;border-radius:10px;padding:11px 11px 11px 14px;
+       cursor:pointer;transition:all .15s;position:relative;flex-shrink:0;border-left:3px solid transparent}
+.kcard.sc{border-left-color:#ef4444}.kcard.sh{border-left-color:#f97316}
+.kcard.sm{border-left-color:#f59e0b}.kcard.sl{border-left-color:#22c55e}
+.kcard:hover{border-color:#2a4a70;border-left-color:inherit}.kcard.sel{border-color:#38bdf8!important}
+.kcard.sc.sel{border-left-color:#ef4444!important}.kcard.sh.sel{border-left-color:#f97316!important}
+.kcard.sm.sel{border-left-color:#f59e0b!important}.kcard.sl.sel{border-left-color:#22c55e!important}
+.kc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.kc-name{font-size:.82rem;font-weight:800;color:#f1f5f9;text-transform:capitalize;
+         display:flex;align-items:center;gap:6px}
+.kc-meta{display:flex;flex-direction:column;gap:4px;margin-top:7px;
+         padding-top:7px;border-top:1px solid #1a2f4a}
+.kmr{font-size:.7rem;color:#5a7a99;display:flex;align-items:center;gap:4px}
+.kmr b{color:#94a3b8}
+.kbtns{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;padding-top:7px;border-top:1px solid #1a2f4a}
+.kb{padding:4px 10px;border-radius:6px;border:none;cursor:pointer;
+    font-size:.7rem;font-weight:700;transition:all .13s}
+.kb-ack{background:#091830;color:#60a5fa;border:1px solid #1d4ed8}
+.kb-ack:hover{background:#1d4ed8;color:#fff}
+.kb-start{background:#0e0630;color:#a78bfa;border:1px solid #5b21b6}
+.kb-start:hover{background:#6d28d9;color:#fff}
+.kb-done{background:#011810;color:#34d399;border:1px solid #065f46}
+.kb-done:hover{background:#059669;color:#fff}
+.ktl{border-top:1px solid #1a2f4a;margin-top:7px;padding-top:6px}
+.ktl-row{font-size:.67rem;color:#5a7a99;padding:1px 0;display:flex;gap:4px}
+
+/* ══ DETAIL PANEL ═══════════════════════════════════════════ */
+.dp{width:390px;flex-shrink:0;background:#0a1628;border-left:1px solid #1a2f4a;
+    display:flex;flex-direction:column;overflow:hidden;transition:width .22s ease}
+.dp.closed{width:0;border-left:none;overflow:hidden}
+.dp-inner{width:390px;height:100%;display:flex;flex-direction:column}
+.dp-hdr{padding:12px 14px;border-bottom:1px solid #1a2f4a;
+        display:flex;align-items:flex-start;gap:9px;flex-shrink:0}
+.dp-icon{font-size:1.5rem;flex-shrink:0}
+.dp-title-wrap{flex:1}
+.dp-name{font-size:.92rem;font-weight:800;color:#f1f5f9;text-transform:capitalize}
+.dp-id{font-size:.67rem;color:#334155;font-family:monospace;margin-top:1px}
+.dp-x{background:none;border:none;color:#334155;cursor:pointer;font-size:1.1rem;
+      padding:2px 4px;transition:color .12s;flex-shrink:0}
+.dp-x:hover{color:#ef4444}
+.dp-body{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:11px}
+.ds{background:#0c1a2e;border:1px solid #1a2f4a;border-radius:9px;padding:11px}
+.ds-h{font-size:.65rem;font-weight:800;color:#334155;text-transform:uppercase;
+      letter-spacing:.06em;margin-bottom:8px}
+.ds-row{display:flex;align-items:center;justify-content:space-between;
+        padding:3px 0;font-size:.75rem;gap:8px}
+.ds-lbl{color:#5a7a99;flex-shrink:0}.ds-val{color:#e2e8f0;font-weight:600;text-align:right}
+.pri-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.po{padding:7px;border-radius:7px;border:1.5px solid #1a2f4a;background:#071422;
+    cursor:pointer;text-align:center;font-size:.72rem;font-weight:800;transition:all .15s}
+.po:hover{border-color:#38bdf8}
+.po.a-p1{background:#450a0a;border-color:#ef4444;color:#fca5a5}
+.po.a-p2{background:#431407;border-color:#f97316;color:#fdba74}
+.po.a-p3{background:#3d2000;border-color:#f59e0b;color:#fde68a}
+.po.a-p4{background:#052e16;border-color:#22c55e;color:#86efac}
+.po-p1{color:#fca5a5}.po-p2{color:#fdba74}.po-p3{color:#fde68a}.po-p4{color:#86efac}
+.asgn-row{display:flex;align-items:center;gap:7px;padding:7px 9px;
+          border-radius:7px;border:1px solid #1a2f4a;background:#071422;margin-bottom:5px}
+.asgn-row.asgnd{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,#071422)}
+.asgn-name{flex:1;font-size:.75rem;font-weight:700;color:#e2e8f0}
+.asgn-st{font-size:.63rem;padding:2px 7px;border-radius:99px;font-weight:700}
+.a-btn{padding:3px 9px;border-radius:6px;border:none;cursor:pointer;font-size:.68rem;font-weight:800;transition:all .13s}
+.a-assign{background:#091830;color:#60a5fa;border:1px solid #1d4ed8}
+.a-assign:hover{background:#1d4ed8;color:#fff}
+.a-unassign{background:#1c0505;color:#f87171;border:1px solid #7f1d1d}
+.a-unassign:hover{background:#7f1d1d;color:#fff}
+.a-act{padding:3px 9px;border-radius:6px;border:none;cursor:pointer;font-size:.68rem;font-weight:800;transition:all .13s;margin-left:3px}
+.a-act.ack{background:#091830;color:#60a5fa;border:1px solid #1d4ed8}
+.a-act.ack:hover{background:#1d4ed8;color:#fff}
+.a-act.start{background:#0e0630;color:#a78bfa;border:1px solid #5b21b6}
+.a-act.start:hover{background:#6d28d9;color:#fff}
+.a-act.done{background:#011810;color:#34d399;border:1px solid #065f46}
+.a-act.done:hover{background:#059669;color:#fff}
+.tl-entry{display:flex;gap:8px;padding:4px 0;font-size:.7rem;
+          border-bottom:1px solid #1a2f4a;align-items:flex-start}
+.tl-entry:last-child{border:none}
+.tl-dot{width:5px;height:5px;border-radius:50%;background:#1e3a5f;
+        flex-shrink:0;margin-top:4px}
+.tl-msg{color:#94a3b8;line-height:1.4;flex:1}
+.tl-ts{color:#334155;font-size:.62rem;white-space:nowrap;flex-shrink:0}
+.dp-notes{width:100%;background:#071422;border:1px solid #1a2f4a;border-radius:7px;
+          padding:8px 10px;color:#e2e8f0;font-size:.75rem;font-family:inherit;
+          resize:vertical;min-height:64px;outline:none}
+.dp-notes:focus{border-color:#38bdf8}
+.save-btn{width:100%;margin-top:5px;padding:7px;border-radius:7px;border:none;
+          background:#091830;color:#60a5fa;border:1px solid #1d4ed8;
+          cursor:pointer;font-size:.75rem;font-weight:800;transition:all .15s}
+.save-btn:hover{background:#1d4ed8;color:#fff}
+.map-a{display:inline-flex;align-items:center;gap:3px;font-size:.7rem;
+       color:#38bdf8;padding:2px 7px;border:1px solid #1a2f4a;border-radius:5px;
+       text-decoration:none;transition:all .13s}
+.map-a:hover{background:#071e36;border-color:#38bdf8}
+
+/* ══ EMPTY / LOADING ════════════════════════════════════════ */
+.empty{text-align:center;padding:44px 16px;color:#334155}
+.empty-ico{font-size:2.5rem;margin-bottom:10px}
+#overlay{position:fixed;inset:0;background:#070d1a;z-index:9999;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#overlay.gone{display:none}
+.spin{width:34px;height:34px;border:3px solid #1a2f4a;border-top-color:#38bdf8;
+      border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ TOASTS ══════════════════════════════════════════════════ */
+#toasts{position:fixed;top:66px;right:14px;z-index:9998;
+        display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:310px}
+.toast{background:#0c1a2e;border:1px solid #1a2f4a;border-radius:9px;
+       padding:10px 13px;display:flex;align-items:flex-start;gap:8px;
+       box-shadow:0 4px 20px rgba(0,0,0,.6);animation:tslide .2s ease;pointer-events:auto}
+.toast.t-new{border-left:3px solid #f59e0b}
+.toast.t-ok {border-left:3px solid #34d399}
+.toast.t-emg{border-left:3px solid #ef4444;background:#1a0505}
+.toast.t-info{border-left:3px solid #38bdf8}
+.t-ico{font-size:1.1rem;flex-shrink:0}
+.t-ttl{font-size:.76rem;font-weight:800;color:#f1f5f9}
+.t-msg{font-size:.7rem;color:#5a7a99;margin-top:1px}
+@keyframes tslide{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+
+@media(max-width:780px){
+  .dp{position:fixed;right:0;top:56px;bottom:0;z-index:300;width:320px!important}
+  .dp.closed{width:0!important}
+  .kanban{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="overlay"><div class="spin"></div>
+  <div style="color:#334155;font-size:.8rem">Connecting to simulation…</div>
+</div>
+<div id="toasts"></div>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════ -->
+<header class="hdr">
+  <div class="hdr-logo">🛡️</div>
+  <div class="hdr-brand">Command Center</div>
+  <div class="hdr-sep"></div>
+  <div class="tabs">
+    <button class="tab on" style="--c:#818cf8" data-v="all"      onclick="switchView('all',this)">📋 All Problems</button>
+    <button class="tab"    style="--c:#3b82f6" data-v="police"   onclick="switchView('police',this)">🚔 Police</button>
+    <button class="tab"    style="--c:#ef4444" data-v="ambulance" onclick="switchView('ambulance',this)">🚑 EMS</button>
+    <button class="tab"    style="--c:#f97316" data-v="road_authority" onclick="switchView('road_authority',this)">🚧 PWD</button>
+    <button class="tab"    style="--c:#22c55e" data-v="municipal" onclick="switchView('municipal',this)">🏙️ Municipal</button>
+  </div>
+  <div class="hdr-right">
+    <div class="ws-dot" id="wsdot" title="WebSocket"></div>
+    <div class="live-chip"><div class="ws-dot ok" style="width:6px;height:6px;animation:pulse 1.5s infinite"></div>LIVE</div>
+    <a href="/" class="back-a">← Map</a>
+  </div>
+</header>
+
+<!-- ══ STATS BAR ═════════════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="sb"><div class="sb-v c-total" id="s-total">0</div><div class="sb-l">Total</div></div>
+  <div class="sb"><div class="sb-v c-crit"  id="s-crit">0</div><div class="sb-l">🔴 Critical</div></div>
+  <div class="sb"><div class="sb-v c-new"   id="s-new">0</div><div class="sb-l">🟡 Unassigned</div></div>
+  <div class="sb"><div class="sb-v c-prog"  id="s-prog">0</div><div class="sb-l">🔧 In Progress</div></div>
+  <div class="sb"><div class="sb-v c-done"  id="s-done">0</div><div class="sb-l">✅ Resolved</div></div>
+  <div class="sb"><div class="sb-v c-emg"   id="s-emg">0</div><div class="sb-l">🚨 Emergency</div></div>
+</div>
+
+<!-- ══ FILTER BAR ════════════════════════════════════════════ -->
+<div class="filter-bar">
+  <span class="fb-lbl">Filter:</span>
+  <button class="fb on" onclick="setF('all',this)">All</button>
+  <button class="fb"    onclick="setF('unassigned',this)">Unassigned</button>
+  <button class="fb"    onclick="setF('critical',this)">🔴 Critical</button>
+  <button class="fb"    onclick="setF('high',this)">🟠 High</button>
+  <button class="fb"    onclick="setF('emergency',this)">🚨 Emergency</button>
+  <button class="fb"    onclick="setF('p1',this)">P1</button>
+  <select class="sort-sel" onchange="sortBy=this.value;renderAll()">
+    <option value="latest">Latest first</option>
+    <option value="priority">By Priority</option>
+    <option value="severity">By Severity</option>
+    <option value="status">By Status</option>
+  </select>
+  <span class="ev-count" id="ev-count"></span>
+  <input class="srch" id="srch" placeholder="🔍 Search ID / type…" oninput="srchQ=this.value.toLowerCase();renderAll()"/>
+</div>
+
+<!-- ══ BODY ══════════════════════════════════════════════════ -->
+<div class="body-wrap" id="body-wrap">
+
+  <!-- All-events list -->
+  <div class="ev-list" id="ev-list">
+    <div class="empty"><div class="empty-ico">⏳</div><div>Waiting for events…</div></div>
+  </div>
+
+  <!-- Kanban -->
+  <div class="kanban" id="kanban">
+    <div class="kcol kc-new">
+      <div class="kchdr">🔔 New / Ack <span class="kcnt" id="kc-new">0</span></div>
+      <div class="kbody" id="kb-new"></div>
+    </div>
+    <div class="kcol kc-prog">
+      <div class="kchdr">🔧 In Progress <span class="kcnt" id="kc-prog">0</span></div>
+      <div class="kbody" id="kb-prog"></div>
+    </div>
+    <div class="kcol kc-done">
+      <div class="kchdr">✅ Completed <span class="kcnt" id="kc-done">0</span></div>
+      <div class="kbody" id="kb-done"></div>
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="dp closed" id="dp">
+    <div class="dp-inner" id="dp-inner"></div>
+  </div>
+</div>
+
+<script>
+/* ══ STATE ══════════════════════════════════════════════════ */
+let curView    = 'all';
+let curFilter  = 'all';
+let sortBy     = 'latest';
+let srchQ      = '';
+let selId      = null;
+
+let enriched   = {};   // event_id → full enriched data (from /api/events/all)
+let wsEvents   = {};   // event_id → event data from WebSocket state
+let wsAlerts   = [];   // alert array from WebSocket
+let authItems  = [];   // items from /api/authority/{}/events
+
+let prevIds    = new Set();
+let prevAlerts = new Set();
+let enrichTimer= null;
+
+const AM = {
+  police:         {label:'Delhi Police',   icon:'🚔', color:'#3b82f6'},
+  ambulance:      {label:'EMS',            icon:'🚑', color:'#ef4444'},
+  road_authority: {label:'PWD Road Auth',  icon:'🚧', color:'#f97316'},
+  municipal:      {label:'Municipal Corp', icon:'🏙️', color:'#22c55e'},
+};
+const PL = {p1:'P1 Critical',p2:'P2 High',p3:'P3 Medium',p4:'P4 Low'};
+const SO = {critical:0,high:1,medium:2,low:3};
+const PO = {p1:0,p2:1,p3:2,p4:3,null:4,undefined:4};
+const StO= {in_progress:0,new:1,acknowledged:2,unassigned:3,completed:4};
+const SevC = {critical:'sc',high:'sh',medium:'sm',low:'sl'};
+
+/* ══ INIT ════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  const p = new URLSearchParams(location.search);
+  const v = p.get('view') || p.get('auth') || 'all';
+  const btn = document.querySelector(`[data-v="${v}"]`);
+  switchView(v, btn || document.querySelector('[data-v="all"]'));
+  connectWS();
+});
+
+/* ══ WEBSOCKET ═══════════════════════════════════════════════ */
+let ws, wsRetry = 0;
+
+function connectWS() {
+  const url = `ws://${location.host}/ws`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    wsRetry = 0;
+    setWsDot('ok');
+  };
+
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type !== 'state') return;
+
+    // Index WS events
+    const newIds = new Set();
+    wsEvents = {};
+    (d.events || []).forEach(ev => { wsEvents[ev.id] = ev; newIds.add(ev.id); });
+
+    // Toast: new events appeared
+    if (prevIds.size > 0) {
+      newIds.forEach(id => {
+        if (!prevIds.has(id)) {
+          const ev = wsEvents[id];
+          if (ev) {
+            const cls = ev.severity === 'critical' || ev.emergency ? 't-emg' : 't-new';
+            toast(`${ev.icon||'📍'} New: ${fmtT(ev.type)}`, `${id} · ${ev.severity}`, cls);
+          }
+        }
+      });
+    }
+    prevIds = newIds;
+
+    // Toast: emergency alerts from WS
+    wsAlerts = d.alerts || [];
+    wsAlerts.slice(0, 5).forEach(al => {
+      const key = `${al.ts}-${al.type}`;
+      if (!prevAlerts.has(key)) {
+        prevAlerts.add(key);
+        if (al.level === 'critical' || al.type === 'emergency_update') {
+          toast(`🚨 ${al.msg || 'Emergency'}`, al.event_id || '', 't-emg');
+        } else if (al.type === 'sync') {
+          toast('📶 Bus reconnected', al.msg || '', 't-info');
+        }
+      }
+    });
+    if (prevAlerts.size > 60) prevAlerts = new Set([...prevAlerts].slice(-30));
+
+    // Update stats from ws (supplements enriched)
+    const emgCount = (d.events || []).filter(e => e.emergency && e.emergency !== 'resolved').length;
+    setText('s-emg', emgCount);
+
+    // Merge with enriched data and render
+    mergeAndRender();
+    document.getElementById('overlay').classList.add('gone');
+  };
+
+  ws.onerror = () => setWsDot('err');
+  ws.onclose = () => {
+    setWsDot('err');
+    const delay = Math.min(5000, 500 * ++wsRetry);
+    setTimeout(connectWS, delay);
+  };
+}
+
+function setWsDot(state) {
+  const d = document.getElementById('wsdot');
+  d.className = 'ws-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+}
+
+/* ══ ENRICHED FETCH (work items + priority) ═════════════════ */
+async function fetchEnriched() {
+  try {
+    if (curView === 'all') {
+      const r = await fetch('/api/events/all');
+      if (!r.ok) return;
+      const d = await r.json();
+      enriched = {};
+      (d.events || []).forEach(ev => { enriched[ev.id] = ev; });
+      updateStatsFrom(d);
+    } else {
+      const r = await fetch(`/api/authority/${curView}/events`);
+      if (!r.ok) return;
+      const d = await r.json();
+      authItems = d.items || [];
+      updateAuthStats(d);
+    }
+    mergeAndRender();
+    if (selId) refreshDP();
+  } catch(e) { console.error('[enrich]', e); }
+}
+
+/* ══ VIEW SWITCH ═════════════════════════════════════════════ */
+function switchView(v, btn) {
+  curView = v;
+  selId   = null;
+  closeDP();
+  history.replaceState(null, '', `?view=${v}`);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.getElementById('ev-list').style.display  = v === 'all' ? 'flex' : 'none';
+  document.getElementById('kanban').style.display   = v !== 'all' ? 'grid' : 'none';
+  prevIds.clear();
+  enriched = {};
+  authItems = [];
+  clearInterval(enrichTimer);
+  fetchEnriched();
+  enrichTimer = setInterval(fetchEnriched, 3000);
+}
+
+/* ══ MERGE & RENDER ══════════════════════════════════════════ */
+function mergeAndRender() {
+  if (curView === 'all') renderAll();
+  else renderKanban();
+}
+
+/* ══ RENDER ALL PROBLEMS ═════════════════════════════════════ */
+function renderAll() {
+  // Merge wsEvents + enriched
+  const ids = new Set([...Object.keys(wsEvents), ...Object.keys(enriched)]);
+  let items = [];
+  ids.forEach(id => {
+    const ws  = wsEvents[id];
+    const en  = enriched[id];
+    if (!ws && !en) return;
+    items.push({ ...(ws||{}), ...(en||{}) });
+  });
+
+  // Filter
+  items = items.filter(ev => {
+    if (srchQ) {
+      const h = ((ev.id||ev.event_id||'') + (ev.type||ev.etype||'')).toLowerCase();
+      if (!h.includes(srchQ)) return false;
+    }
+    const sev = ev.severity || '';
+    const os  = ev.overall_status || 'unassigned';
+    const emg = ev.emergency;
+    const pri = ev.priority || 'none';
+    if (curFilter === 'critical')   return sev === 'critical';
+    if (curFilter === 'high')       return sev === 'high';
+    if (curFilter === 'unassigned') return os === 'unassigned' || os === 'new';
+    if (curFilter === 'emergency')  return !!emg && emg !== 'resolved';
+    if (curFilter === 'p1')         return pri === 'p1';
+    return true;
+  });
+
+  // Sort
+  items.sort((a, b) => {
+    if (sortBy === 'priority') {
+      const d = (PO[a.priority]??4) - (PO[b.priority]??4);
+      if (d) return d;
+    }
+    if (sortBy === 'severity') {
+      const d = (SO[a.severity]??9) - (SO[b.severity]??9);
+      if (d) return d;
+    }
+    if (sortBy === 'status') {
+      const d = (StO[a.overall_status]??9) - (StO[b.overall_status]??9);
+      if (d) return d;
+    }
+    return (b.ts||0) - (a.ts||0);
+  });
+
+  setText('ev-count', items.length + ' events');
+
+  const el = document.getElementById('ev-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">🔍</div>
+      <div>No events match this filter</div></div>`;
+    return;
+  }
+
+  const st = el.scrollTop;
+  el.innerHTML = items.map(ev => rowHTML(ev)).join('');
+  el.scrollTop = st;
+}
+
+function rowHTML(ev) {
+  const id   = ev.id || ev.event_id || '';
+  const type = ev.type || ev.etype || '';
+  const sev  = ev.severity || 'low';
+  const sc   = SevC[sev] || 'sl';
+  const sel  = selId === id ? ' sel' : '';
+  const pri  = ev.priority;
+  const os   = ev.overall_status || 'unassigned';
+
+  const priBadge = pri
+    ? `<span class="bpri b${pri}">${PL[pri]}</span>` : '';
+  const emgBadge = ev.emergency && ev.emergency !== 'resolved'
+    ? `<span class="bemg">🚨 ${(ev.emergency||'').replace(/_/g,' ')}</span>` : '';
+  const vBadge = ev.verification
+    ? `<span class="bvf ${ev.verification}">${{fully_verified:'✅',partially_verified:'🔄',unverified:'⚠️'}[ev.verification]||''} ${(ev.verification||'').replace(/_/g,' ')}</span>` : '';
+
+  // Authority assignment chips
+  let assignChips = '';
+  if (ev.assignments) {
+    assignChips = Object.entries(ev.assignments)
+      .filter(([,v]) => v.assigned)
+      .map(([auth, v]) => {
+        const m = AM[auth];
+        const stColor = {new:'#f59e0b',acknowledged:'#60a5fa',in_progress:'#a78bfa',completed:'#34d399'}[v.status]||'#5a7a99';
+        return `<span class="ac" style="background:color-mix(in srgb,${m.color} 14%,#071422);color:${m.color}">${m.icon} ${(v.status||'').replace(/_/g,' ')}</span>`;
+      }).join('');
+  }
+
+  const conf = ev.confidence ? Math.round(ev.confidence*100)+'%' : '';
+  const age  = fmtAge(ev.age_s);
+
+  return `<div class="erow ${sc}${sel}" id="erow-${id}" onclick="selEv('${id}')">
+    <div class="row-ico">${ev.icon||'📍'}</div>
+    <div class="row-body">
+      <div class="row-top">
+        <span class="row-type">${fmtT(type)}</span>
+        <span class="row-id">${id}</span>
+        <span class="bsev ${sc}">${sev.toUpperCase()}</span>
+        ${priBadge}${emgBadge}
+      </div>
+      <div class="row-meta">
+        <div class="rm">📍 <b>${(ev.lat||0).toFixed(4)}, ${(ev.lng||0).toFixed(4)}</b></div>
+        <div class="rm">🚌 <b>${ev.detected_by||'—'}</b></div>
+        ${conf?`<div class="rm">🤖 <b>${conf}</b></div>`:''}
+        <div class="rm">⏱ <b>${age}</b></div>
+        ${vBadge?`<div class="rm">${vBadge}</div>`:''}
+      </div>
+      ${assignChips?`<div class="row-assigns">${assignChips}</div>`:''}
+    </div>
+    <div class="row-right">
+      <span class="bst s-${os}">${os.replace(/_/g,' ')}</span>
+    </div>
+  </div>`;
+}
+
+/* ══ RENDER KANBAN ═══════════════════════════════════════════ */
+function renderKanban() {
+  const all = authItems.filter(ev => {
+    if (srchQ) {
+      const h = ((ev.event_id||'')+(ev.type||'')).toLowerCase();
+      if (!h.includes(srchQ)) return false;
+    }
+    const sev = ev.severity||'';
+    const ws  = ev.work_status||'';
+    const emg = ev.emergency;
+    const pri = enriched[ev.event_id]?.priority || 'none';
+    if (curFilter === 'critical')   return sev==='critical';
+    if (curFilter === 'high')       return sev==='high';
+    if (curFilter === 'unassigned') return ws==='new';
+    if (curFilter === 'emergency')  return !!emg && emg!=='resolved';
+    if (curFilter === 'p1')         return pri==='p1';
+    return true;
+  });
+
+  const newI  = all.filter(i => i.work_status==='new'||i.work_status==='acknowledged');
+  const progI = all.filter(i => i.work_status==='in_progress');
+  const doneI = all.filter(i => i.work_status==='completed');
+
+  setText('kc-new',  newI.length);
+  setText('kc-prog', progI.length);
+  setText('kc-done', doneI.length);
+  rKCol('kb-new',  newI,  'new');
+  rKCol('kb-prog', progI, 'prog');
+  rKCol('kb-done', doneI, 'done');
+}
+
+function rKCol(id, items, col) {
+  const el = document.getElementById(id);
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">${col==='done'?'🎉':col==='prog'?'⚙️':'📭'}</div>
+      <div>${col==='done'?'None resolved yet':col==='prog'?'Nothing active':'Queue empty'}</div></div>`;
+    return;
+  }
+  const st = el.scrollTop;
+  el.innerHTML = items.map(it => kCardHTML(it, col)).join('');
+  el.scrollTop = st;
+}
+
+function kCardHTML(it, col) {
+  const sev = it.severity||'low';
+  const sc  = SevC[sev]||'sl';
+  const sel = selId===it.event_id?' sel':'';
+  const pri = enriched[it.event_id]?.priority || it.priority;
+  const priBadge = pri ? `<span class="bpri b${pri}">${PL[pri]}</span>` : '';
+  const emgBadge = it.emergency && it.emergency!=='resolved'
+    ? `<span class="bemg" style="font-size:.58rem;padding:1px 5px">🚨 EMG</span>` : '';
+  const conf = Math.round((it.confidence||0)*100);
+  const confColor = conf>=85?'#34d399':conf>=65?'#fbbf24':'#f87171';
+  const vfIcon = {fully_verified:'✅',partially_verified:'🔄',unverified:'⚠️'}[it.verification]||'';
+  const vfLabel = {fully_verified:'Verified',partially_verified:'Partial',unverified:'Unverified'}[it.verification]||'';
+
+  let btns='';
+  if (col==='new') {
+    if (it.work_status==='new')
+      btns+=`<button class="kb kb-ack" onclick="stopEv(event);kAct('${it.event_id}','acknowledge')">👀 Acknowledge</button>`;
+    btns+=`<button class="kb kb-start" onclick="stopEv(event);kAct('${it.event_id}','start')">🔧 Start Work</button>`;
+  } else if (col==='prog') {
+    btns=`<button class="kb kb-done" onclick="stopEv(event);kAct('${it.event_id}','complete')">✅ Mark Complete</button>`;
+  } else {
+    btns=`<span style="font-size:.7rem;color:#34d399;font-weight:800;display:flex;align-items:center;gap:4px">✅ Resolved</span>`;
+  }
+
+  // Last timeline entry
+  const lastTL = (it.timeline||[]).slice(-1)[0];
+  const tlHtml = lastTL
+    ? `<div class="ktl" style="margin-top:0;padding-top:0;border:none">
+         <div class="ktl-row" style="font-size:.65rem;color:#475569">
+           <span>💬</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lastTL.msg}</span>
+         </div>
+       </div>` : '';
+
+  return `<div class="kcard ${sc}${sel}" id="kcard-${it.event_id}" onclick="selEv('${it.event_id}')">
+
+    <!-- Header: type + badges -->
+    <div class="kc-top">
+      <div class="kc-name">${it.icon||'📍'} ${fmtT(it.type)}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <span class="bsev ${sc}">${sev.toUpperCase()}</span>
+        ${priBadge}${emgBadge}
+      </div>
+    </div>
+
+    <!-- Meta rows -->
+    <div class="kc-meta">
+      <div class="kmr">
+        <span>🤖</span>
+        <span style="color:${confColor};font-weight:800">${conf}%</span>
+        <span>confidence</span>
+        <span style="margin-left:4px;padding:1px 5px;background:#071422;border-radius:4px;font-size:.62rem;color:#334155">${it.event_id}</span>
+      </div>
+      <div class="kmr">
+        <span>⏱</span><b>${fmtAge(it.age_s)}</b>
+        ${vfLabel?`<span style="margin-left:4px">${vfIcon} ${vfLabel}</span>`:''}
+      </div>
+      <div class="kmr">📍 <b>${(it.lat||0).toFixed(4)}, ${(it.lng||0).toFixed(4)}</b>
+        <span style="margin-left:4px;color:#334155">${(it.detected_by||'').split(' ')[0]||''}</span>
+      </div>
+      ${lastTL?`<div class="kmr" style="color:#334155;font-size:.65rem;overflow:hidden">
+        <span>💬</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px">${lastTL.msg}</span>
+      </div>`:''}
+    </div>
+
+    <!-- Action buttons -->
+    <div class="kbtns">${btns}
+      <button class="kb" style="background:#071422;color:#38bdf8;border:1px solid #1a2f4a;margin-left:auto"
+        onclick="stopEv(event);selEv('${it.event_id}')">🔍 Details</button>
+    </div>
+  </div>`;
+}
+
+/* ══ DETAIL PANEL ════════════════════════════════════════════ */
+async function selEv(id) {
+  selId = id;
+  // Highlight
+  document.querySelectorAll('.erow,.kcard').forEach(el => {
+    el.classList.toggle('sel', el.id === 'erow-'+id || el.id === 'kcard-'+id);
+  });
+  document.getElementById('dp').classList.remove('closed');
+  await refreshDP();
+}
+
+async function refreshDP() {
+  if (!selId) return;
+  try {
+    const r = await fetch(`/api/events/${selId}`);
+    if (!r.ok) { closeDP(); return; }
+    const ev = await r.json();
+    drawDP(ev);
+  } catch(e) { console.error('[dp]', e); }
+}
+
+function closeDP() {
+  selId = null;
+  document.getElementById('dp').classList.add('closed');
+  document.querySelectorAll('.erow,.kcard').forEach(el => el.classList.remove('sel'));
+}
+
+function drawDP(ev) {
+  const id   = ev.id || ev.event_id || selId;
+  const type = ev.type || ev.etype || '';
+  const sev  = ev.severity || 'low';
+  const sc   = SevC[sev] || 'sl';
+  const pri  = ev.priority;
+  const os   = ev.overall_status || 'unassigned';
+
+  // Priority grid
+  const priGrid = ['p1','p2','p3','p4'].map(p => {
+    const lbl = {p1:'🔴 P1 Critical',p2:'🟠 P2 High',p3:'🟡 P3 Medium',p4:'🟢 P4 Low'}[p];
+    const acls = pri===p ? ` a-${p}` : '';
+    return `<div class="po po-${p}${acls}" onclick="setPri('${id}','${p}')">${lbl}</div>`;
+  }).join('');
+  const priClear = pri
+    ? `<div class="po" style="grid-column:span 2;color:#5a7a99;font-size:.68rem"
+         onclick="setPri('${id}','none')">✕ Clear priority</div>` : '';
+
+  // Assignment rows
+  const eligible = ev.eligible_authorities || [];
+  const asnHTML = eligible.length ? eligible.map(auth => {
+    const m  = AM[auth];
+    const ai = (ev.assignments||{})[auth] || {};
+    const assigned = ai.assigned;
+    const status   = ai.status || '';
+    const stColor  = {new:'#f59e0b',acknowledged:'#60a5fa',in_progress:'#a78bfa',completed:'#34d399'}[status]||'#5a7a99';
+    const stLabel  = status.replace(/_/g,' ');
+    const actionBtns = assigned ? actionButtons(id, auth, status) : '';
+    return `<div class="asgn-row${assigned?' asgnd':''}" ${assigned?`style="--ac:${m.color}"`:''}>
+      <span>${m.icon}</span>
+      <span class="asgn-name">${m.label}</span>
+      ${assigned ? `<span class="asgn-st" style="background:color-mix(in srgb,${stColor} 15%,#071422);color:${stColor}">${stLabel}</span>` : ''}
+      ${assigned
+        ? `<button class="a-btn a-unassign" onclick="unassign('${id}','${auth}')">✕</button>${actionBtns}`
+        : `<button class="a-btn a-assign"   onclick="assignTo('${id}','${auth}')">+ Assign</button>`}
+    </div>`;
+  }).join('') : '<div style="color:#334155;font-size:.73rem">No eligible authorities for this type.</div>';
+
+  // Timeline (all entries, newest first)
+  const tl = (ev.full_timeline || ev.timeline || []).slice().reverse();
+  const tlHTML = tl.length ? tl.map(t => {
+    const ts = t.ts ? new Date(t.ts*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
+    return `<div class="tl-entry">
+      <div class="tl-dot"></div>
+      <div class="tl-msg">${t.msg||''}</div>
+      <div class="tl-ts">${ts}</div>
+    </div>`;
+  }).join('') : '<div style="color:#334155;font-size:.72rem">No events yet.</div>';
+
+  const conf = ev.confidence ? Math.round(ev.confidence*100)+'%' : '—';
+  const cColor = ev.confidence >= .85 ? '#34d399' : ev.confidence >= .65 ? '#fbbf24' : '#f87171';
+  const emgBadge = ev.emergency && ev.emergency !== 'resolved'
+    ? `<div class="ds-row"><span class="ds-lbl">🚨 Emergency</span>
+       <span style="color:#ef4444;font-weight:800">${(ev.emergency||'').replace(/_/g,' ')}</span></div>` : '';
+  const curNote = ev.assignments
+    ? Object.values(ev.assignments).find(a=>a.notes)?.notes || '' : '';
+  const vLbl = {fully_verified:'✅ Fully Verified',partially_verified:'🔄 Partially Verified',unverified:'⚠️ Unverified'}[ev.verification] || ev.verification || '';
+
+  document.getElementById('dp-inner').innerHTML = `
+    <div class="dp-hdr">
+      <div class="dp-icon">${ev.icon||'📍'}</div>
+      <div class="dp-title-wrap">
+        <div class="dp-name">${fmtT(type)}</div>
+        <div class="dp-id">${id}</div>
+      </div>
+      <button class="dp-x" onclick="closeDP()">✕</button>
+    </div>
+    <div class="dp-body">
+
+      <!-- Overview -->
+      <div class="ds">
+        <div class="ds-h">📋 Overview</div>
+        <div class="ds-row">
+          <span class="ds-lbl">Severity</span>
+          <span class="bsev ${sc}">${sev.toUpperCase()}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Priority</span>
+          <span>${pri ? `<span class="bpri b${pri}">${PL[pri]}</span>` : '<span style="color:#334155">Not set</span>'}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Status</span>
+          <span class="bst s-${os}">${os.replace(/_/g,' ')}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Verification</span>
+          <span class="bvf ${ev.verification||''}">${vLbl}</span>
+        </div>
+        ${emgBadge}
+        <div class="ds-row">
+          <span class="ds-lbl">Location</span>
+          <span class="ds-val">${(ev.lat||0).toFixed(5)}, ${(ev.lng||0).toFixed(5)}</span>
+        </div>
+        <div class="ds-row" style="margin-top:2px">
+          <span class="ds-lbl"></span>
+          <a href="/?lat=${ev.lat}&lng=${ev.lng}" class="map-a" target="_blank">📍 View on Map</a>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Detected by</span>
+          <span class="ds-val" style="font-size:.68rem">${ev.detected_by||'—'}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">AI Confidence</span>
+          <span style="color:${cColor};font-weight:800">${conf}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Age</span>
+          <span class="ds-val">${fmtAge(ev.age_s)}</span>
+        </div>
+        <div class="ds-row">
+          <span class="ds-lbl">Timeline entries</span>
+          <span class="ds-val">${tl.length}</span>
+        </div>
+      </div>
+
+      <!-- Priority -->
+      <div class="ds">
+        <div class="ds-h">🎯 Set Priority</div>
+        <div class="pri-grid">${priGrid}${priClear}</div>
+      </div>
+
+      <!-- Assignment -->
+      <div class="ds">
+        <div class="ds-h">📋 Authority Assignments</div>
+        ${asnHTML}
+      </div>
+
+      <!-- Notes -->
+      <div class="ds">
+        <div class="ds-h">📝 Field Notes</div>
+        <textarea class="dp-notes" id="dp-note" rows="3"
+          placeholder="Add notes…">${hesc(curNote)}</textarea>
+        <button class="save-btn" onclick="saveNote('${id}')">💾 Save Note</button>
+      </div>
+
+      <!-- Timeline -->
+      <div class="ds">
+        <div class="ds-h">🕐 Full Timeline (${tl.length})</div>
+        ${tlHTML}
+      </div>
+
+    </div>`;
+}
+
+function actionButtons(evId, auth, status) {
+  if (status === 'completed') return '';
+  let html = '';
+  if (status === 'new')
+    html += `<button class="a-act ack"   onclick="authAct('${evId}','${auth}','acknowledge')">👀</button>`;
+  if (status !== 'in_progress')
+    html += `<button class="a-act start" onclick="authAct('${evId}','${auth}','start')">🔧</button>`;
+  html += `<button class="a-act done"  onclick="authAct('${evId}','${auth}','complete')">✅</button>`;
+  return html;
+}
+
+/* ══ ACTIONS ═════════════════════════════════════════════════ */
+async function setPri(id, level) {
+  await fetch(`/api/events/${id}/priority/${level}`, {method:'POST'});
+  toast('🎯 Priority '+({p1:'P1 Critical',p2:'P2 High',p3:'P3 Medium',p4:'P4 Low',none:'cleared'}[level]||level), id, 't-ok');
+  await fetchEnriched();
+  if (selId===id) refreshDP();
+}
+
+async function assignTo(id, auth) {
+  const r = await fetch(`/api/events/${id}/assign/${auth}`, {method:'POST'});
+  if (r.ok) {
+    toast(`📋 Assigned to ${AM[auth].icon} ${AM[auth].label}`, id, 't-ok');
+    await fetchEnriched();
+    if (selId===id) refreshDP();
+  }
+}
+
+async function unassign(id, auth) {
+  await fetch(`/api/events/${id}/assign/${auth}`, {method:'DELETE'});
+  toast(`🗑️ Unassigned from ${AM[auth].label}`, '', '');
+  await fetchEnriched();
+  if (selId===id) refreshDP();
+}
+
+async function authAct(id, auth, action) {
+  const r = await fetch(`/api/authority/${auth}/work/${id}/${action}`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
+  });
+  if (r.ok) {
+    const m = {acknowledge:'👀 Acknowledged',start:'🔧 Work started',complete:'✅ Completed'};
+    toast(m[action]||'Updated', id, 't-ok');
+    await fetchEnriched();
+    if (selId===id) refreshDP();
+  }
+}
+
+async function kAct(id, action) {
+  const r = await fetch(`/api/authority/${curView}/work/${id}/${action}`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
+  });
+  if (r.ok) {
+    const m = {acknowledge:'👀 Acknowledged',start:'🔧 Work started',complete:'✅ Completed'};
+    toast(m[action]||'Updated', id, 't-ok');
+    await fetchEnriched();
+    if (selId===id) refreshDP();
+  }
+}
+
+async function saveNote(id) {
+  const notes = document.getElementById('dp-note')?.value || '';
+  const ev = enriched[id];
+  const assigned = ev?.assignments
+    ? Object.entries(ev.assignments).filter(([,v])=>v.assigned) : [];
+  const auth = curView !== 'all' ? curView : (assigned[0]?.[0] || null);
+  if (!auth) { toast('⚠️ Assign first', 'Assign to an authority to save notes', ''); return; }
+  await fetch(`/api/authority/${auth}/work/${id}/note`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({notes})
+  });
+  toast('💾 Note saved', '', 't-ok');
+}
+
+/* ══ STATS ═══════════════════════════════════════════════════ */
+function updateStatsFrom(d) {
+  const sc = d.status_counts || {};
+  const sv = d.sev_counts    || {};
+  setText('s-total', d.total || 0);
+  setText('s-crit',  sv.critical || 0);
+  setText('s-new',   sc.unassigned || 0);
+  setText('s-prog',  sc.in_progress || 0);
+  setText('s-done',  sc.completed || 0);
+}
+function updateAuthStats(d) {
+  const c = d.counts || {};
+  setText('s-total', d.total || 0);
+  setText('s-crit',  (d.items||[]).filter(i=>i.severity==='critical').length);
+  setText('s-new',   c.new || 0);
+  setText('s-prog',  c.in_progress || 0);
+  setText('s-done',  c.completed || 0);
+}
+
+/* ══ FILTER ══════════════════════════════════════════════════ */
+function setF(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  mergeAndRender();
+}
+
+/* ══ UTILS ═══════════════════════════════════════════════════ */
+function fmtT(t){ return (t||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
+function fmtAge(s) {
+  s = Math.max(0, Math.round(s||0));
+  if (s < 60)   return s+'s ago';
+  if (s < 3600) return Math.floor(s/60)+'m ago';
+  return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m ago';
+}
+function setText(id, v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+function hesc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function stopEv(e){ e.stopPropagation(); }
+
+function toast(title, msg, cls) {
+  const c = document.getElementById('toasts');
+  const d = document.createElement('div');
+  d.className = `toast ${cls||'t-info'}`;
+  d.innerHTML = `<div class="t-ico">${cls==='t-emg'?'🚨':cls==='t-ok'?'✅':cls==='t-new'?'🔔':'ℹ️'}</div>
+    <div><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div>`;
+  c.appendChild(d);
+  setTimeout(() => d.remove(), 4500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# Place yolov8s.pt here — auto-downloaded by run.py on first launch

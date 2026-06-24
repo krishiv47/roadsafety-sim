@@ -1,0 +1,15 @@
+# Vercel builds ONLY the React frontend (see vercel.json → frontend/dist).
+# Exclude the Python backend, ML model weights, and submission artifacts so the
+# upload stays small and the build stays clean.
+*.pt
+roadsafety_ai/
+submission/
+static/
+*.py
+Dockerfile
+.dockerignore
+render.yaml
+DEPLOY.md
+*.md
+frontend/dist/
+frontend/node_modules/

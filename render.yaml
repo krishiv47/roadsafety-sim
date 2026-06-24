@@ -1,0 +1,15 @@
+# Render Blueprint — deploys the FULL app as a single Docker web service
+# (React UI + FastAPI API + WebSockets), built from the existing Dockerfile.
+# YOLOv8s inference needs ~2 GB RAM, so this uses the Standard plan.
+services:
+  - type: web
+    name: roadsafety-sim
+    runtime: docker
+    plan: standard              # 2 GB RAM / 1 CPU — required for YOLOv8s
+    region: singapore           # closest Render region to India
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT               # app listens on 8000 (run.py); route traffic there
+        value: "8000"

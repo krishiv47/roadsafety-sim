@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Env / secrets — never commit real keys
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Frontend build intermediates (the served build is committed under static/)
+frontend/dist/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Training artifacts (datasets + run outputs are large / transient)
+roadsafety_ai/_dataset/
+roadsafety_ai/_runs/
+runs/

@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Road Safety AI — Presentation</title>
+<style>
+/* ══════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070d1a;
+  --surface:#0f1929;
+  --surface2:#162035;
+  --border:#1e2f47;
+  --text:#e2e8f0;
+  --muted:#7492b8;
+  --accent:#38bdf8;
+  --accent2:#818cf8;
+  --green:#34d399;
+  --orange:#fb923c;
+  --red:#f87171;
+  --yellow:#fbbf24;
+  --pink:#f472b6;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;
+  user-select:none}
+
+/* ══════════════════════════════════════════════════
+   SLIDE CONTAINER
+══════════════════════════════════════════════════ */
+#deck{
+  width:100vw;height:100vh;
+  position:relative;overflow:hidden;
+}
+
+/* ══════════════════════════════════════════════════
+   SLIDE
+══════════════════════════════════════════════════ */
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:60px 80px 80px;
+  opacity:0;pointer-events:none;
+  transform:translateX(60px);
+  transition:opacity .45s cubic-bezier(.4,0,.2,1),
+              transform .45s cubic-bezier(.4,0,.2,1);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.slide.prev{opacity:0;transform:translateX(-60px)}
+
+/* ══════════════════════════════════════════════════
+   ANIMATED BG GRID
+══════════════════════════════════════════════════ */
+#bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(56,189,248,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(56,189,248,.04) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+}
+#bg-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,
+    rgba(56,189,248,.12) 0%,transparent 60%);
+}
+.slide{z-index:1}
+
+/* ══════════════════════════════════════════════════
+   PROGRESS / NAV
+══════════════════════════════════════════════════ */
+#progress-bar{
+  position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s ease;z-index:200;
+}
+#nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;z-index:200;
+}
+.nav-btn{
+  width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);
+  background:rgba(15,25,41,.85);backdrop-filter:blur(8px);
+  color:var(--text);cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);
+               background:rgba(56,189,248,.1)}
+#slide-counter{
+  font-size:.78rem;color:var(--muted);font-weight:600;
+  background:rgba(15,25,41,.85);backdrop-filter:blur(8px);
+  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  min-width:64px;text-align:center;
+}
+#dot-nav{
+  position:fixed;right:24px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;z-index:200;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border);cursor:pointer;
+  transition:all .2s;
+}
+.dot.active{background:var(--accent);transform:scale(1.4)}
+.dot:hover{background:var(--muted)}
+
+/* ══════════════════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════════════════ */
+.slide-label{
+  font-size:.72rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--accent);margin-bottom:12px;
+}
+.slide-title{
+  font-size:2.8rem;font-weight:800;line-height:1.1;
+  background:linear-gradient(135deg,#fff 0%,var(--accent) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:8px;
+}
+.slide-title.lg{font-size:3.6rem}
+.slide-sub{
+  font-size:1.1rem;color:var(--muted);line-height:1.6;
+  max-width:700px;
+}
+.accent{color:var(--accent)}
+.green{color:var(--green)}
+.orange{color:var(--orange)}
+.red{color:var(--red)}
+.yellow{color:var(--yellow)}
+.pink{color:var(--pink)}
+.purple{color:var(--accent2)}
+
+/* ══════════════════════════════════════════════════
+   CARD GRID
+══════════════════════════════════════════════════ */
+.grid{display:grid;gap:16px;margin-top:28px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+.g23{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:22px;
+  transition:transform .2s,border-color .2s;
+}
+.card:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.3)}
+.card.accent-border{border-color:var(--accent);
+  box-shadow:0 0 20px rgba(56,189,248,.1)}
+.card-icon{font-size:2rem;margin-bottom:10px;display:block}
+.card-title{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:6px}
+.card-body{font-size:.8rem;color:var(--muted);line-height:1.6}
+.card-num{font-size:2.4rem;font-weight:800;margin-bottom:4px}
+.card-num-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;
+                letter-spacing:.08em}
+
+/* ══════════════════════════════════════════════════
+   PILL / TAG
+══════════════════════════════════════════════════ */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+      border-radius:99px;font-size:.75rem;font-weight:600}
+.pill-blue{background:rgba(56,189,248,.12);color:var(--accent);
+           border:1px solid rgba(56,189,248,.25)}
+.pill-green{background:rgba(52,211,153,.12);color:var(--green);
+            border:1px solid rgba(52,211,153,.25)}
+.pill-orange{background:rgba(251,146,60,.12);color:var(--orange);
+             border:1px solid rgba(251,146,60,.25)}
+.pill-red{background:rgba(248,113,113,.12);color:var(--red);
+          border:1px solid rgba(248,113,113,.25)}
+.pill-purple{background:rgba(129,140,248,.12);color:var(--accent2);
+             border:1px solid rgba(129,140,248,.25)}
+
+/* ══════════════════════════════════════════════════
+   SPECIAL COMPONENTS
+══════════════════════════════════════════════════ */
+/* Architecture diagram */
+.arch-row{display:flex;align-items:center;gap:0;margin-top:28px}
+.arch-box{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px 12px;text-align:center;
+  position:relative;
+}
+.arch-box .arch-icon{font-size:1.8rem;display:block;margin-bottom:6px}
+.arch-box .arch-label{font-size:.78rem;font-weight:700;color:#fff}
+.arch-box .arch-sub{font-size:.68rem;color:var(--muted);margin-top:3px}
+.arch-arrow{flex:0 0 40px;text-align:center;color:var(--accent);font-size:1.3rem}
+
+/* Flow steps */
+.flow{display:flex;gap:0;margin-top:28px;align-items:stretch}
+.flow-step{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:18px 14px;position:relative;
+}
+.flow-step::after{
+  content:'→';position:absolute;right:-16px;top:50%;
+  transform:translateY(-50%);color:var(--accent);font-size:1.1rem;z-index:2;
+}
+.flow-step:last-child::after{display:none}
+.flow-num{width:26px;height:26px;border-radius:50%;
+           background:var(--accent);color:#000;
+           font-size:.75rem;font-weight:800;
+           display:flex;align-items:center;justify-content:center;
+           margin-bottom:8px}
+.flow-title{font-size:.82rem;font-weight:700;color:#fff;margin-bottom:4px}
+.flow-body{font-size:.72rem;color:var(--muted);line-height:1.5}
+.flow + .flow{margin-top:10px}
+
+/* Timeline steps */
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:20px}
+.tl-step{display:flex;align-items:flex-start;gap:14px;padding:12px 0;
+          border-bottom:1px solid var(--border);position:relative}
+.tl-step:last-child{border-bottom:none}
+.tl-icon{width:38px;height:38px;border-radius:10px;
+          display:flex;align-items:center;justify-content:center;
+          font-size:1.2rem;flex-shrink:0}
+.tl-body{flex:1}
+.tl-title{font-size:.85rem;font-weight:700;color:#fff}
+.tl-desc{font-size:.75rem;color:var(--muted);margin-top:3px;line-height:1.5}
+.tl-time{font-size:.7rem;color:var(--accent);font-weight:600;
+          margin-left:auto;flex-shrink:0;padding-top:2px}
+
+/* Stat banner */
+.stat-banner{
+  display:flex;gap:16px;margin-top:28px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:20px 28px;
+}
+.sb-item{flex:1;text-align:center;border-right:1px solid var(--border)}
+.sb-item:last-child{border-right:none}
+.sb-val{font-size:2.2rem;font-weight:800;line-height:1}
+.sb-label{font-size:.72rem;color:var(--muted);margin-top:4px;
+           text-transform:uppercase;letter-spacing:.06em}
+
+/* Scene cards */
+.scene-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;
+}
+.scene-num{font-size:.68rem;color:var(--muted);font-weight:700;
+            text-transform:uppercase;letter-spacing:.08em}
+.scene-icon{font-size:2rem}
+.scene-title{font-size:.9rem;font-weight:700;color:#fff}
+.scene-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.scene-tag{font-size:.65rem;padding:2px 8px;border-radius:99px;
+            background:rgba(56,189,248,.1);color:var(--accent);
+            border:1px solid rgba(56,189,248,.2)}
+
+/* Tech stack */
+.tech-chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;
+}
+.tech-chip-icon{font-size:1.3rem;flex-shrink:0}
+.tech-chip-info{}
+.tech-chip-name{font-size:.8rem;font-weight:700;color:#fff}
+.tech-chip-role{font-size:.68rem;color:var(--muted);margin-top:1px}
+
+/* Big quote */
+.big-quote{
+  font-size:1.6rem;font-weight:700;color:#fff;line-height:1.4;
+  border-left:4px solid var(--accent);padding-left:20px;
+  margin-top:28px;max-width:700px;
+}
+
+/* Cover specific */
+#slide-cover{
+  justify-content:center;
+  background:radial-gradient(ellipse 90% 80% at 50% -5%,
+    rgba(56,189,248,.08) 0%,transparent 55%);
+}
+.cover-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);
+  border-radius:99px;padding:6px 16px;font-size:.8rem;
+  color:var(--accent);font-weight:600;margin-bottom:20px;
+}
+.cover-title{
+  font-size:4.5rem;font-weight:900;line-height:1;
+  background:linear-gradient(135deg,#fff 0%,var(--accent) 55%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:12px;
+}
+.cover-subtitle{font-size:1.3rem;color:var(--muted);margin-bottom:36px}
+.cover-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:40px}
+.cover-meta{display:flex;gap:32px}
+.cover-meta-item{font-size:.82rem;color:var(--muted)}
+.cover-meta-item strong{color:#fff;display:block;font-size:.95rem}
+
+/* Thank you */
+#slide-end{
+  justify-content:center;align-items:center;text-align:center;
+  background:radial-gradient(ellipse 80% 70% at 50% 50%,
+    rgba(56,189,248,.07) 0%,transparent 60%);
+}
+.end-icon{font-size:5rem;margin-bottom:20px}
+.end-title{font-size:3.5rem;font-weight:900;
+  background:linear-gradient(135deg,#fff,var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:12px}
+.end-sub{font-size:1.1rem;color:var(--muted);margin-bottom:36px}
+.demo-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-weight:800;font-size:1rem;
+  padding:14px 32px;border-radius:14px;text-decoration:none;
+  border:none;cursor:pointer;transition:transform .2s,opacity .2s;
+}
+.demo-btn:hover{transform:translateY(-2px);opacity:.9}
+
+/* Bar chart */
+.bar-chart{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:12px}
+.bar-label{font-size:.75rem;color:var(--muted);width:120px;flex-shrink:0;text-align:right}
+.bar-bg{flex:1;height:24px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;display:flex;align-items:center;
+           padding-left:10px;font-size:.7rem;font-weight:700;color:#000;
+           transition:width 1s ease}
+.bar-val{font-size:.75rem;color:var(--muted);width:50px;flex-shrink:0}
+
+/* Comparison table */
+.comp-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:.8rem}
+.comp-table th{background:var(--surface2);padding:10px 14px;text-align:left;
+               font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;
+               color:var(--muted);border-bottom:1px solid var(--border)}
+.comp-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr:hover td{background:rgba(56,189,248,.03)}
+td.highlight{color:var(--green);font-weight:700}
+
+/* Two-column layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px;
+         align-items:start}
+.two-col.asym{grid-template-columns:1.2fr 1fr}
+
+/* List */
+.feature-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.fl-item{display:flex;align-items:flex-start;gap:10px}
+.fl-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.fl-text{}
+.fl-title{font-size:.85rem;font-weight:700;color:#fff}
+.fl-desc{font-size:.75rem;color:var(--muted);margin-top:2px;line-height:1.5}
+
+/* Keyboard hint */
+#key-hint{
+  position:fixed;bottom:28px;left:28px;font-size:.7rem;
+  color:var(--border);z-index:200;
+}
+kbd{background:var(--surface2);border:1px solid var(--border);
+    border-radius:4px;padding:2px 6px;font-family:monospace}
+
+/* Hover glow on certain cards */
+.glow-blue:hover{box-shadow:0 0 24px rgba(56,189,248,.15);border-color:rgba(56,189,248,.4)}
+.glow-green:hover{box-shadow:0 0 24px rgba(52,211,153,.15);border-color:rgba(52,211,153,.4)}
+.glow-orange:hover{box-shadow:0 0 24px rgba(251,146,60,.15);border-color:rgba(251,146,60,.4)}
+
+/* Presentation title strip */
+.slide-header-strip{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:6px;
+}
+.strip-brand{font-size:.7rem;color:var(--border);font-weight:600;
+              text-transform:uppercase;letter-spacing:.1em}
+
+/* Animated counter */
+@keyframes countUp{from{transform:translateY(8px);opacity:0}
+                   to{transform:translateY(0);opacity:1}}
+.count-anim{animation:countUp .5s ease forwards}
+
+/* Detection label chips */
+.det-chip{display:inline-flex;align-items:center;gap:4px;
+           padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="bg-grid"></div>
+<div id="bg-glow"></div>
+<div id="progress-bar"></div>
+
+<!-- Dot navigation -->
+<div id="dot-nav"></div>
+
+<!-- Bottom nav -->
+<div id="nav">
+  <button class="nav-btn" onclick="prevSlide()">←</button>
+  <span id="slide-counter">1 / 14</span>
+  <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<div id="key-hint"><kbd>←</kbd> <kbd>→</kbd> arrow keys to navigate</div>
+
+<!-- Download PDF button -->
+<a href="/presentation/download" download="RoadSafety_AI_Presentation.pdf"
+   style="position:fixed;top:16px;right:16px;z-index:300;
+          display:flex;align-items:center;gap:7px;
+          background:rgba(15,25,41,.9);backdrop-filter:blur(8px);
+          border:1px solid #1e2f47;border-radius:10px;
+          padding:8px 16px;text-decoration:none;
+          color:#e2e8f0;font-size:.78rem;font-weight:600;
+          transition:all .2s;font-family:inherit"
+   onmouseover="this.style.borderColor='#38bdf8';this.style.color='#38bdf8'"
+   onmouseout="this.style.borderColor='#1e2f47';this.style.color='#e2e8f0'">
+  ⬇ Download PDF
+</a>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDES
+══════════════════════════════════════════════════ -->
+<div id="deck">
+
+<!-- ───── SLIDE 1: COVER ───── -->
+<section class="slide active" id="slide-cover">
+  <div style="max-width:780px">
+    <div class="cover-tag">🏆 Smart India Hackathon 2025</div>
+    <div class="cover-title">Road Safety<br>AI System</div>
+    <div class="cover-subtitle">Real-time Hazard Detection + City-scale Digital Twin</div>
+    <div class="cover-pills">
+      <span class="pill pill-blue">🤖 YOLOv8 AI</span>
+      <span class="pill pill-green">🚌 100 Virtual Buses</span>
+      <span class="pill pill-orange">🗺️ Delhi Routes</span>
+      <span class="pill pill-purple">⚡ Live WebSocket</span>
+      <span class="pill pill-red">🚨 Emergency Pipeline</span>
+    </div>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Domain</strong>Smart Transport & Safety</div>
+      <div class="cover-meta-item"><strong>Stack</strong>Python · FastAPI · YOLOv8 · OpenCV</div>
+      <div class="cover-meta-item"><strong>Scale</strong>City → State → India-wide</div>
+    </div>
+  </div>
+
+  <!-- floating cards -->
+  <div style="position:absolute;right:80px;top:50%;transform:translateY(-50%);
+              display:flex;flex-direction:column;gap:12px;width:240px">
+    <div class="card" style="border-color:rgba(56,189,248,.3)">
+      <span style="font-size:1.5rem">🕳️</span>
+      <div style="font-size:.8rem;font-weight:700;color:#fff;margin-top:6px">Pothole Detected</div>
+      <div style="font-size:.7rem;color:var(--muted)">conf 82% · BUS-023 · 2s ago</div>
+      <div style="height:4px;background:var(--surface2);border-radius:99px;margin-top:8px">
+        <div style="width:82%;height:100%;background:var(--accent);border-radius:99px"></div>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(248,113,113,.3)">
+      <span style="font-size:1.5rem">🚗</span>
+      <div style="font-size:.8rem;font-weight:700;color:#fff;margin-top:6px">Accident Alert</div>
+      <div style="font-size:.7rem;color:var(--red)">🚨 CRITICAL · Emergency active</div>
+    </div>
+    <div class="card" style="border-color:rgba(52,211,153,.3)">
+      <span style="font-size:1.5rem">🚦</span>
+      <div style="font-size:.8rem;font-weight:700;color:#fff;margin-top:6px">Traffic Light: RED</div>
+      <div style="font-size:.7rem;color:var(--muted)">YOLOv8 · conf 92%</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 2: PROBLEM ───── -->
+<section class="slide">
+  <div class="slide-label">The Problem</div>
+  <div class="slide-title">India's Roads Are<br><span class="red">Dangerously Unmonitored</span></div>
+  <div class="slide-sub">Manual inspection is slow, reactive, and geographically limited — costing lives and billions of rupees annually.</div>
+
+  <div class="stat-banner">
+    <div class="sb-item"><div class="sb-val red">1.53L</div><div class="sb-label">Road deaths / year</div></div>
+    <div class="sb-item"><div class="sb-val orange">5 crore</div><div class="sb-label">Potholes on Indian roads</div></div>
+    <div class="sb-item"><div class="sb-val yellow">₹1.5L Cr</div><div class="sb-label">Annual economic loss</div></div>
+    <div class="sb-item"><div class="sb-val accent">70%</div><div class="sb-label">Accidents preventable</div></div>
+  </div>
+
+  <div class="grid g3" style="margin-top:20px">
+    <div class="card glow-red">
+      <span class="card-icon">⏳</span>
+      <div class="card-title">Delayed Reporting</div>
+      <div class="card-body">Potholes & road damage are reported days after appearing. Accidents rely on bystander calls.</div>
+    </div>
+    <div class="card glow-orange">
+      <span class="card-icon">👁️‍🗨️</span>
+      <div class="card-title">No Real-time Visibility</div>
+      <div class="card-body">Authorities have zero live awareness of road conditions across city networks.</div>
+    </div>
+    <div class="card glow-blue">
+      <span class="card-icon">📡</span>
+      <div class="card-title">Fragmented Response</div>
+      <div class="card-body">Police, ambulance & road authority operate in silos — no unified command.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 3: SOLUTION OVERVIEW ───── -->
+<section class="slide">
+  <div class="slide-label">Our Solution</div>
+  <div class="slide-title">One Unified Platform<br>for <span class="accent">Smart Road Safety</span></div>
+
+  <div class="grid g4" style="margin-top:32px">
+    <div class="card accent-border glow-blue">
+      <span class="card-icon">🤖</span>
+      <div class="card-title">AI Detection Engine</div>
+      <div class="card-body">YOLOv8s + OpenCV CV pipeline detecting potholes, accidents, waterlogging, traffic lights in real-time.</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+        <span class="det-chip pill-blue">5 hazard types</span>
+        <span class="det-chip pill-green">82–92% conf</span>
+      </div>
+    </div>
+    <div class="card glow-green">
+      <span class="card-icon">🗺️</span>
+      <div class="card-title">City Digital Twin</div>
+      <div class="card-body">100 virtual buses across 10 real Delhi routes, GPS movement, live Leaflet.js map with heatmap.</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+        <span class="det-chip pill-green">Real coordinates</span>
+      </div>
+    </div>
+    <div class="card glow-orange">
+      <span class="card-icon">🚨</span>
+      <div class="card-title">Emergency Pipeline</div>
+      <div class="card-body">Automatic escalation: Police → Ambulance → Road Authority → Resolved with live timeline.</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+        <span class="det-chip pill-orange">Auto-dispatch</span>
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏛️</span>
+      <div class="card-title">Authority Dashboard</div>
+      <div class="card-body">Dedicated command center for each authority type — notifications, work tracking, completion stats.</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">
+        <span class="det-chip pill-purple">4 authority types</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-quote" style="font-size:1.2rem;margin-top:28px">
+    "From pothole on road to authority response — <span class="accent">fully automated, under 5 minutes.</span>"
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 4: SYSTEM ARCHITECTURE ───── -->
+<section class="slide">
+  <div class="slide-label">Architecture</div>
+  <div class="slide-title">How It All <span class="accent">Connects</span></div>
+
+  <div class="arch-row" style="margin-top:36px">
+    <div class="arch-box" style="border-color:rgba(56,189,248,.4)">
+      <span class="arch-icon">📸</span>
+      <div class="arch-label">Dashcam / Upload</div>
+      <div class="arch-sub">Image · Video · Synthetic</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-color:rgba(129,140,248,.4)">
+      <span class="arch-icon">🤖</span>
+      <div class="arch-label">AI Detector</div>
+      <div class="arch-sub">YOLOv8s + CV<br>Port 8001</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-color:rgba(251,146,60,.4)">
+      <span class="arch-icon">⚙️</span>
+      <div class="arch-label">Sim Engine</div>
+      <div class="arch-sub">FastAPI + asyncio<br>Port 8002</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-color:rgba(52,211,153,.4)">
+      <span class="arch-icon">📡</span>
+      <div class="arch-label">WebSocket</div>
+      <div class="arch-sub">Real-time push<br>every 2s</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-color:rgba(244,114,182,.4)">
+      <span class="arch-icon">🖥️</span>
+      <div class="arch-label">Dashboards</div>
+      <div class="arch-sub">City Map +<br>Authority Portal</div>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card">
+      <div class="card-title">🔄 Event Flow</div>
+      <div class="card-body" style="font-size:.77rem;line-height:1.8">
+        Bus detects hazard → <span class="accent">AI scores it</span> →<br>
+        Sim engine stores event →<br>
+        Nearby buses verify it →<br>
+        <span class="green">Confidence locks in</span> →<br>
+        Authority gets notified
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💾 Data Models</div>
+      <div class="card-body" style="font-size:.77rem;line-height:1.8">
+        <span class="accent">Bus</span>: id, route, GPS, speed, network state<br>
+        <span class="orange">Event</span>: type, severity, confidence, timeline<br>
+        <span class="green">WorkItem</span>: authority, status, notes, timestamps<br>
+        <span class="purple">Alert</span>: emergency escalation log
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌐 Network Simulation</div>
+      <div class="card-body" style="font-size:.77rem;line-height:1.8">
+        Markov chain: <span class="green">good</span> / <span class="yellow">weak</span> / <span class="red">offline</span><br>
+        good→good: <span class="green">91%</span> · good→weak: 8%<br>
+        weak→good: 45% · weak→none: 6%<br>
+        Offline queue auto-syncs on reconnect
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 5: AI DETECTION ───── -->
+<section class="slide">
+  <div class="slide-label">AI Detection Engine</div>
+  <div class="slide-title">YOLOv8s + Computer Vision<br><span class="accent">Dual-layer Detection</span></div>
+
+  <div class="two-col asym" style="margin-top:24px">
+    <div>
+      <div class="card" style="border-color:rgba(129,140,248,.3);margin-bottom:16px">
+        <div class="card-title" style="font-size:1rem">🤖 Layer 1 — YOLOv8s (21.5 MB)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">🚗</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Vehicle / Accident Detection</span><span class="accent">COCO cls 2,3,5,7</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:88%;height:100%;background:var(--accent2);border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">🚦</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Traffic Light State (R/Y/G)</span><span class="green">HSV analysis</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:92%;height:100%;background:var(--green);border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">🚶</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Pedestrian on Road</span><span class="yellow">Lower 60% zone</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:85%;height:100%;background:var(--yellow);border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(251,146,60,.3)">
+        <div class="card-title" style="font-size:1rem">🔬 Layer 2 — OpenCV CV Fallback</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">🕳️</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Pothole (adaptive threshold + dark pixel OR)</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:82%;height:100%;background:var(--orange);border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">🌊</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Waterlogging (blue/brown HSV pool &gt;15%)</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:91%;height:100%;background:#38bdf8;border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.1rem">💥</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px">
+                <span style="color:#fff">Multi-vehicle incident (overlapping colour blobs)</span>
+              </div>
+              <div style="height:6px;background:var(--surface2);border-radius:99px">
+                <div style="width:71%;height:100%;background:var(--red);border-radius:99px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card" style="border-color:rgba(52,211,153,.3)">
+        <div class="card-title">🔍 Accident Multi-signal Score</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:10px;line-height:2">
+          <div>Vehicle IoU overlap <span class="accent" style="float:right">×0.6</span></div>
+          <div>Person near vehicle <span class="accent" style="float:right">+0.35</span></div>
+          <div>High optical flow motion <span class="accent" style="float:right">+0.20</span></div>
+          <div>Dense vehicle cluster <span class="accent" style="float:right">+0.25</span></div>
+          <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px">
+            Threshold &gt;0.45 → <span class="orange">HIGH</span>  ·  &gt;0.75 → <span class="red">CRITICAL</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Detection Outputs</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:10px;line-height:1.9">
+          ✅ Annotated JPEG with bounding boxes<br>
+          ✅ Base64 encoded (JSON-safe)<br>
+          ✅ Per-detection: class, conf, bbox, severity<br>
+          ✅ Traffic density + advice<br>
+          ✅ Inject-to-map button → live simulation
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 6: SIMULATION ───── -->
+<section class="slide">
+  <div class="slide-label">City Digital Twin</div>
+  <div class="slide-title">100 Buses · 10 Routes<br><span class="green">Delhi in Real-time</span></div>
+
+  <div class="two-col" style="margin-top:24px">
+    <div>
+      <div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,.3)">
+        <div class="card-title">🗺️ 10 Real Delhi Corridors</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;font-size:.75rem">
+          <div style="color:var(--muted)">🔴 North Ring Road</div>
+          <div style="color:var(--muted)">🔵 East Delhi</div>
+          <div style="color:var(--muted)">🟢 South Delhi</div>
+          <div style="color:var(--muted)">🟡 Central Corridor</div>
+          <div style="color:var(--muted)">🟠 West Delhi</div>
+          <div style="color:var(--muted)">🟣 NH-48</div>
+          <div style="color:var(--muted)">🟤 Outer Ring North</div>
+          <div style="color:var(--muted)">⬜ South Loop</div>
+          <div style="color:var(--muted)">🩷 Airport Express</div>
+          <div style="color:var(--muted)">🩵 Inner Ring</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Simulation Engine</div>
+        <div style="font-size:.77rem;color:var(--muted);margin-top:10px;line-height:1.9">
+          🔁 <span style="color:#fff">Tick rate:</span> 2s per step (adjustable speed)<br>
+          📍 <span style="color:#fff">GPS:</span> Haversine + linear waypoint interpolation<br>
+          📶 <span style="color:#fff">Network:</span> Markov-chain good/weak/offline<br>
+          📦 <span style="color:#fff">Offline queue:</span> auto-syncs on reconnect<br>
+          🚦 <span style="color:#fff">Events:</span> 8 types, weighted probability<br>
+          🔄 <span style="color:#fff">Verification:</span> unverified → full (65m radius)
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="grid g2" style="margin-top:0">
+        <div class="card" style="text-align:center">
+          <div class="card-num accent">100</div>
+          <div class="card-num-label">Live Buses</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-num green">8</div>
+          <div class="card-num-label">Event Types</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-num orange">250</div>
+          <div class="card-num-label">Max Events</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-num yellow">8min</div>
+          <div class="card-num-label">Event TTL</div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(251,146,60,.3)">
+        <div class="card-title">📋 8 Road Event Types</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+          <span class="pill pill-red">🕳️ Pothole 27%</span>
+          <span class="pill pill-blue">〰️ Road Crack 18%</span>
+          <span class="pill pill-orange">🌊 Waterlogging 12%</span>
+          <span class="pill pill-purple">🚦 Heavy Traffic 14%</span>
+          <span class="pill pill-red">🚗 Accident 8%</span>
+          <span class="pill pill-green">🚧 Roadblock 8%</span>
+          <span class="pill pill-green">🌲 Fallen Tree 6%</span>
+          <span class="pill pill-blue">🐄 Animal 7%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 7: VERIFICATION PIPELINE ───── -->
+<section class="slide">
+  <div class="slide-label">Verification System</div>
+  <div class="slide-title">Multi-Bus Verification<br><span class="accent">Crowd-sourced Confidence</span></div>
+
+  <div style="margin-top:32px">
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-title">🚌 First Bus Detects</div>
+        <div class="flow-body">Bus detects hazard, AI assigns confidence 60–98%. Event logged as <span style="color:var(--red)">UNVERIFIED</span>.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-title">📍 Second Bus Passes</div>
+        <div class="flow-body">Any other bus within <span style="color:var(--accent)">65 metres</span> corroborates → status becomes <span style="color:var(--yellow)">PARTIALLY VERIFIED</span>.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-title">✅ Third Bus Confirms</div>
+        <div class="flow-body">One more verification → <span style="color:var(--green)">FULLY VERIFIED</span>. Confidence now actionable for authorities.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-title">🏛️ Authority Notified</div>
+        <div class="flow-body">Verified events routed to the correct authority type. Work item created in their dashboard.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:20px">
+    <div class="card" style="border-color:rgba(52,211,153,.3)">
+      <div class="card-title">Why Multi-bus Verification?</div>
+      <div class="card-body" style="line-height:1.8">
+        ✅ Eliminates single-sensor false positives<br>
+        ✅ Simulates crowdsourced ground truth<br>
+        ✅ Scales naturally — more buses = faster verification<br>
+        ✅ Works offline (syncs when network returns)
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Verification Radius</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
+        <div style="width:80px;height:80px;border-radius:50%;border:3px solid var(--accent);
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                    font-size:1.2rem;font-weight:800;color:var(--accent)">65m</div>
+        <div style="font-size:.8rem;color:var(--muted);line-height:1.7">
+          Haversine distance calculation between bus GPS and event coordinates. A passing bus within this radius automatically counts as a verification corroboration.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 8: EMERGENCY RESPONSE ───── -->
+<section class="slide">
+  <div class="slide-label">Emergency Response</div>
+  <div class="slide-title">Automatic Escalation<br><span class="red">Accident to Resolved — 6 min</span></div>
+
+  <div class="timeline" style="margin-top:28px">
+    <div class="tl-step">
+      <div class="tl-icon" style="background:rgba(248,113,113,.15);color:var(--red)">🚨</div>
+      <div class="tl-body">
+        <div class="tl-title">Critical Event Detected</div>
+        <div class="tl-desc">Bus AI flags: accident / fallen tree / roadblock with high/critical severity → Emergency protocol activated immediately.</div>
+      </div>
+      <div class="tl-time">T + 0s</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-icon" style="background:rgba(56,189,248,.15);color:var(--accent)">🚔</div>
+      <div class="tl-body">
+        <div class="tl-title">Police Unit Dispatched</div>
+        <div class="tl-desc">Delhi Police command center receives GPS-precise alert. Nearest unit auto-assigned. Status: <span style="color:var(--accent)">police_notified</span>.</div>
+      </div>
+      <div class="tl-time">T + 30s</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-icon" style="background:rgba(251,146,60,.15);color:var(--orange)">🚑</div>
+      <div class="tl-body">
+        <div class="tl-title">Ambulance En Route</div>
+        <div class="tl-desc">EMS dashboard shows incident card. Paramedics dispatched with precise coordinates. Status: <span style="color:var(--orange)">ambulance_notified</span>.</div>
+      </div>
+      <div class="tl-time">T + 90s</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-icon" style="background:rgba(251,191,36,.15);color:var(--yellow)">🚧</div>
+      <div class="tl-body">
+        <div class="tl-title">Road Authority Alerted</div>
+        <div class="tl-desc">PWD / MCD gets work order for road clearance & repair. Status: <span style="color:var(--yellow)">authority_notified</span>.</div>
+      </div>
+      <div class="tl-time">T + 150s</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-icon" style="background:rgba(52,211,153,.15);color:var(--green)">✅</div>
+      <div class="tl-body">
+        <div class="tl-title">Incident Resolved & Road Cleared</div>
+        <div class="tl-desc">Authority marks task complete on dashboard. Event archived. Heatmap updated. Full audit trail preserved.</div>
+      </div>
+      <div class="tl-time">T + 6min</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(248,113,113,.25);margin-top:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:1.5rem">⚡</span>
+      <div>
+        <div style="font-size:.88rem;font-weight:700;color:#fff">Critical events: accident · fallen tree · roadblock</div>
+        <div style="font-size:.78rem;color:var(--muted)">Only high/critical severity events trigger emergency protocol — low severity goes to standard authority workflow.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 9: AUTHORITY DASHBOARD ───── -->
+<section class="slide">
+  <div class="slide-label">Authority Command Center</div>
+  <div class="slide-title">Dedicated Portal for<br><span class="purple">Every Authority Type</span></div>
+
+  <div class="two-col" style="margin-top:24px">
+    <div>
+      <div class="grid g2" style="margin-top:0;margin-bottom:14px">
+        <div class="card" style="border-color:rgba(56,189,248,.3)">
+          <div style="font-size:1.5rem">🚔</div>
+          <div class="card-title" style="margin-top:6px">Delhi Police</div>
+          <div class="card-body">Accidents, roadblocks, heavy traffic</div>
+        </div>
+        <div class="card" style="border-color:rgba(248,113,113,.3)">
+          <div style="font-size:1.5rem">🚑</div>
+          <div class="card-title" style="margin-top:6px">EMS / Ambulance</div>
+          <div class="card-body">Critical accident response only</div>
+        </div>
+        <div class="card" style="border-color:rgba(251,146,60,.3)">
+          <div style="font-size:1.5rem">🚧</div>
+          <div class="card-title" style="margin-top:6px">PWD Road Authority</div>
+          <div class="card-body">Potholes, cracks, waterlogging, trees</div>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,.3)">
+          <div style="font-size:1.5rem">🏙️</div>
+          <div class="card-title" style="margin-top:6px">Municipal Corp</div>
+          <div class="card-body">Waterlogging, animals, potholes</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="feature-list">
+        <div class="fl-item">
+          <span class="fl-icon">📊</span>
+          <div class="fl-text">
+            <div class="fl-title">Live Stats Bar</div>
+            <div class="fl-desc">Total assigned, New, In Progress, Completed with animated progress bar</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-icon">📋</span>
+          <div class="fl-text">
+            <div class="fl-title">Kanban Work Board</div>
+            <div class="fl-desc">3-column board: New → In Progress → Completed with drag-to-update buttons</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-icon">🔔</span>
+          <div class="fl-text">
+            <div class="fl-title">Live Toast Notifications</div>
+            <div class="fl-desc">Pop-up alerts when new events are assigned, auto-refresh every 3s</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-icon">📝</span>
+          <div class="fl-text">
+            <div class="fl-title">Notes & Timeline</div>
+            <div class="fl-desc">Officers add field notes, full event timeline shown per card</div>
+          </div>
+        </div>
+        <div class="fl-item">
+          <span class="fl-icon">🔍</span>
+          <div class="fl-text">
+            <div class="fl-title">Filter & Search</div>
+            <div class="fl-desc">Filter by Critical / High / Unverified / Emergency, search by event ID</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 10: DETECTION SCENES ───── -->
+<section class="slide">
+  <div class="slide-label">AI Demo Scenarios</div>
+  <div class="slide-title">5 Live Detection Scenes<br><span class="accent">Click → Annotated in seconds</span></div>
+
+  <div class="grid g3" style="margin-top:24px">
+    <div class="scene-card glow-blue">
+      <div class="scene-num">Scene 01</div>
+      <div class="scene-icon">🕳️</div>
+      <div class="scene-title">Pothole Road</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">Dark asphalt with 3 potholes + road cracks. CV adaptive threshold + dark-pixel OR.</div>
+      <div class="scene-tags">
+        <span class="scene-tag">4 potholes</span>
+        <span class="scene-tag">conf 74–82%</span>
+      </div>
+    </div>
+    <div class="scene-card">
+      <div class="scene-num">Scene 02</div>
+      <div class="scene-icon">🚦</div>
+      <div class="scene-title">Traffic Light (RED)</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">Two traffic lights on poles. YOLOv8 detects both, HSV confirms RED state.</div>
+      <div class="scene-tags">
+        <span class="scene-tag">2 traffic lights</span>
+        <span class="scene-tag">conf 88–92%</span>
+      </div>
+    </div>
+    <div class="scene-card" style="border-color:rgba(248,113,113,.3)">
+      <div class="scene-num">Scene 03</div>
+      <div class="scene-icon">🚗</div>
+      <div class="scene-title">Traffic Accident</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">3 overlapping vehicles (different colours). CV detects cross-band bbox overlap → collision.</div>
+      <div class="scene-tags">
+        <span class="scene-tag">1 accident</span>
+        <span class="scene-tag">conf 71% HIGH</span>
+      </div>
+    </div>
+    <div class="scene-card" style="border-color:rgba(56,189,248,.3)">
+      <div class="scene-num">Scene 04</div>
+      <div class="scene-icon">🌊</div>
+      <div class="scene-title">Waterlogging</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">Large blue/muddy pool covering &gt;40% of road. HSV pool detector + stranded car.</div>
+      <div class="scene-tags">
+        <span class="scene-tag">waterlogging</span>
+        <span class="scene-tag">conf 91% HIGH</span>
+      </div>
+    </div>
+    <div class="scene-card">
+      <div class="scene-num">Scene 05</div>
+      <div class="scene-icon">🚦</div>
+      <div class="scene-title">Heavy Traffic</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">15 cars in 3 lanes + red traffic light. YOLO detects light, CV detects road texture anomalies.</div>
+      <div class="scene-tags">
+        <span class="scene-tag">1 traffic light</span>
+        <span class="scene-tag">4 potholes</span>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(52,211,153,.3);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:10px">
+      <div style="font-size:2rem">📸</div>
+      <div style="font-size:.9rem;font-weight:700;color:#fff">Upload Your Own</div>
+      <div style="font-size:.75rem;color:var(--muted)">Drag &amp; drop any road photo → instant AI annotation + inject to live map</div>
+      <span class="pill pill-green" style="margin-top:4px">Any image format</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 11: SCALABILITY ───── -->
+<section class="slide">
+  <div class="slide-label">Scalability</div>
+  <div class="slide-title">City → State → <span class="accent">India-wide</span></div>
+
+  <div class="two-col" style="margin-top:24px">
+    <div>
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Scale Mode</th>
+            <th>Buses</th>
+            <th>Events/min</th>
+            <th>API RPS</th>
+            <th>Alert lag</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-green" style="font-size:.7rem">City (100)</span></td>
+            <td class="highlight">100</td>
+            <td>~10</td>
+            <td>5</td>
+            <td class="highlight">800ms</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue" style="font-size:.7rem">State (1K)</span></td>
+            <td class="highlight">1,000</td>
+            <td>~100</td>
+            <td>50</td>
+            <td class="highlight">1.5s</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-purple" style="font-size:.7rem">India (10K)</span></td>
+            <td class="highlight">10,000</td>
+            <td>~1,000</td>
+            <td>500</td>
+            <td class="highlight">4.2s</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card" style="margin-top:16px;border-color:rgba(56,189,248,.2)">
+        <div class="card-title">📡 India-wide Extrapolation</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:10px;line-height:1.8">
+          🚌 BEST Mumbai alone: <span style="color:#fff">3,400 buses</span><br>
+          🚌 DTC Delhi: <span style="color:#fff">7,000+ buses</span><br>
+          🌐 All India state RTCs: <span style="color:var(--accent)">~1.5 lakh buses</span><br>
+          🏙️ Cities covered: <span style="color:var(--green)">500+ with GPS fleet</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card" style="border-color:rgba(52,211,153,.3)">
+        <div class="card-title">🏗️ Horizontal Scaling</div>
+        <div class="feature-list" style="margin-top:10px">
+          <div class="fl-item">
+            <span class="fl-icon" style="font-size:.9rem">⚡</span>
+            <div class="fl-text">
+              <div class="fl-title" style="font-size:.8rem">Asyncio event loop — non-blocking</div>
+            </div>
+          </div>
+          <div class="fl-item">
+            <span class="fl-icon" style="font-size:.9rem">📡</span>
+            <div class="fl-text">
+              <div class="fl-title" style="font-size:.8rem">WebSocket fan-out to N clients</div>
+            </div>
+          </div>
+          <div class="fl-item">
+            <span class="fl-icon" style="font-size:.9rem">🔢</span>
+            <div class="fl-text">
+              <div class="fl-title" style="font-size:.8rem">Scale parameter multiplies all metrics</div>
+            </div>
+          </div>
+          <div class="fl-item">
+            <span class="fl-icon" style="font-size:.9rem">☁️</span>
+            <div class="fl-text">
+              <div class="fl-title" style="font-size:.8rem">Deploy on cloud — Redis + Kafka ready</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔮 Future: Real IoT Integration</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.8">
+          Replace simulated buses with <span style="color:#fff">real GPS trackers</span><br>
+          Plug in dashcam feeds from bus CCTV<br>
+          OpenStreetMap + GTFS route data<br>
+          SMS/push alerts to civic workers
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 12: TECH STACK ───── -->
+<section class="slide">
+  <div class="slide-label">Technology Stack</div>
+  <div class="slide-title">Built With <span class="accent">Production-grade</span> Tools</div>
+
+  <div class="grid g4" style="margin-top:28px">
+    <div class="tech-chip"><div class="tech-chip-icon">🤖</div><div class="tech-chip-info"><div class="tech-chip-name">YOLOv8s</div><div class="tech-chip-role">Object detection</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">👁️</div><div class="tech-chip-info"><div class="tech-chip-name">OpenCV</div><div class="tech-chip-role">CV / image processing</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">⚡</div><div class="tech-chip-info"><div class="tech-chip-name">FastAPI</div><div class="tech-chip-role">REST + WebSocket API</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🔄</div><div class="tech-chip-info"><div class="tech-chip-name">asyncio</div><div class="tech-chip-role">Non-blocking sim loop</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🗺️</div><div class="tech-chip-info"><div class="tech-chip-name">Leaflet.js</div><div class="tech-chip-role">Interactive map</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🔥</div><div class="tech-chip-info"><div class="tech-chip-name">leaflet.heat</div><div class="tech-chip-role">Incident heatmap</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🐍</div><div class="tech-chip-info"><div class="tech-chip-name">Python 3.11</div><div class="tech-chip-role">Core runtime</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🔢</div><div class="tech-chip-info"><div class="tech-chip-name">NumPy</div><div class="tech-chip-role">Array / matrix ops</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🧠</div><div class="tech-chip-info"><div class="tech-chip-name">Ultralytics</div><div class="tech-chip-role">YOLO model wrapper</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">📡</div><div class="tech-chip-info"><div class="tech-chip-name">WebSockets</div><div class="tech-chip-role">Real-time push</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">🗂️</div><div class="tech-chip-info"><div class="tech-chip-name">CartoDB Tiles</div><div class="tech-chip-role">Dark map tiles</div></div></div>
+    <div class="tech-chip"><div class="tech-chip-icon">📐</div><div class="tech-chip-info"><div class="tech-chip-name">Haversine</div><div class="tech-chip-role">GPS distance calc</div></div></div>
+  </div>
+
+  <div class="stat-banner" style="margin-top:24px">
+    <div class="sb-item"><div class="sb-val accent">~1,800</div><div class="sb-label">Lines of Python</div></div>
+    <div class="sb-item"><div class="sb-val green">~2,600</div><div class="sb-label">Lines of HTML/JS</div></div>
+    <div class="sb-item"><div class="sb-val orange">3</div><div class="sb-label">HTML Dashboards</div></div>
+    <div class="sb-item"><div class="sb-val yellow">15+</div><div class="sb-label">API Endpoints</div></div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 13: IMPACT & ROADMAP ───── -->
+<section class="slide">
+  <div class="slide-label">Impact & Roadmap</div>
+  <div class="slide-title">Saving Lives Through<br><span class="green">Data-Driven Action</span></div>
+
+  <div class="two-col" style="margin-top:24px">
+    <div>
+      <div class="card" style="border-color:rgba(52,211,153,.3);margin-bottom:14px">
+        <div class="card-title">🎯 Demonstrated Impact</div>
+        <div class="bar-chart" style="margin-top:12px">
+          <div class="bar-row">
+            <div class="bar-label">Detection speed</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:95%;background:linear-gradient(90deg,#059669,#34d399)">95% faster</div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Response time</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:82%;background:linear-gradient(90deg,#d97706,#fbbf24)">82% faster</div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">False positive rate</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:25%;background:linear-gradient(90deg,#0284c7,#38bdf8)">25% (multi-bus ↓)</div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Coverage area</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#7c3aed,#818cf8)">All bus routes</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💰 Cost Advantage</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:10px;line-height:1.8">
+          Uses <span style="color:#fff">existing bus GPS + dashcams</span> — zero new hardware<br>
+          Model size: <span style="color:var(--green)">21.5 MB</span> — runs on Raspberry Pi<br>
+          Open source stack — <span style="color:var(--green)">₹0 licensing</span><br>
+          1 server handles 100+ buses real-time
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="border-color:rgba(129,140,248,.3)">
+        <div class="card-title">🔮 Phase 2 Roadmap</div>
+        <div class="timeline" style="margin-top:10px">
+          <div class="tl-step" style="padding:8px 0">
+            <div class="tl-icon" style="background:rgba(56,189,248,.1);color:var(--accent);width:32px;height:32px;font-size:1rem">📡</div>
+            <div class="tl-body">
+              <div class="tl-title" style="font-size:.82rem">Real IoT Integration</div>
+              <div class="tl-desc">Live GPS + dashcam from actual BEST / DTC buses</div>
+            </div>
+          </div>
+          <div class="tl-step" style="padding:8px 0">
+            <div class="tl-icon" style="background:rgba(52,211,153,.1);color:var(--green);width:32px;height:32px;font-size:1rem">🏋️</div>
+            <div class="tl-body">
+              <div class="tl-title" style="font-size:.82rem">Fine-tuned Pothole Model</div>
+              <div class="tl-desc">Custom YOLOv8 trained on IDD / BDD100k pothole dataset</div>
+            </div>
+          </div>
+          <div class="tl-step" style="padding:8px 0">
+            <div class="tl-icon" style="background:rgba(251,146,60,.1);color:var(--orange);width:32px;height:32px;font-size:1rem">📱</div>
+            <div class="tl-body">
+              <div class="tl-title" style="font-size:.82rem">Mobile App for Officers</div>
+              <div class="tl-desc">Field worker app with offline detection capability</div>
+            </div>
+          </div>
+          <div class="tl-step" style="padding:8px 0">
+            <div class="tl-icon" style="background:rgba(244,114,182,.1);color:var(--pink);width:32px;height:32px;font-size:1rem">☁️</div>
+            <div class="tl-body">
+              <div class="tl-title" style="font-size:.82rem">Cloud Deploy (Redis + Kafka)</div>
+              <div class="tl-desc">Production-grade message queue for 10K+ buses</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ───── SLIDE 14: THANK YOU ───── -->
+<section class="slide" id="slide-end">
+  <div class="end-icon">🛡️</div>
+  <div class="end-title">Thank You</div>
+  <div class="end-sub">Road Safety AI System — Smart India Hackathon 2025</div>
+
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:32px">
+    <span class="pill pill-blue">🤖 YOLOv8s Detection</span>
+    <span class="pill pill-green">🚌 100-Bus Simulation</span>
+    <span class="pill pill-orange">🚨 Emergency Pipeline</span>
+    <span class="pill pill-purple">🏛️ Authority Dashboard</span>
+  </div>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+    <a href="/" class="demo-btn" target="_blank">
+      🗺️ Launch City Simulation
+    </a>
+    <a href="/authority?auth=road_authority" class="demo-btn"
+       style="background:linear-gradient(135deg,#059669,#34d399)" target="_blank">
+      🏛️ Authority Dashboard
+    </a>
+  </div>
+
+  <div style="margin-top:40px;display:flex;gap:48px;justify-content:center">
+    <div style="text-align:center">
+      <div style="font-size:2rem;font-weight:800;color:var(--accent)">5</div>
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Hazard Types</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:2rem;font-weight:800;color:var(--green)">100</div>
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Virtual Buses</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:2rem;font-weight:800;color:var(--orange)">4</div>
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Authorities</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:2rem;font-weight:800;color:var(--yellow)">6 min</div>
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Full Response</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:2rem;font-weight:800;color:var(--pink)">10K</div>
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Bus Capacity</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<script>
+/* ═══════════════════════════════════════════════
+   SLIDE ENGINE
+═══════════════════════════════════════════════ */
+const slides  = document.querySelectorAll('.slide');
+const total   = slides.length;
+let current   = 0;
+let animating = false;
+
+// Build dot nav
+const dotNav = document.getElementById('dot-nav');
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotNav.appendChild(d);
+});
+
+function goTo(n, dir = 1) {
+  if (animating || n === current) return;
+  animating = true;
+
+  const oldSlide = slides[current];
+  const newSlide = slides[n];
+
+  // Direction classes
+  oldSlide.classList.add('prev');
+  oldSlide.classList.remove('active');
+  newSlide.style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+  newSlide.style.opacity = '0';
+  newSlide.classList.add('active');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      newSlide.style.transform = '';
+      newSlide.style.opacity = '';
+
+      setTimeout(() => {
+        oldSlide.classList.remove('prev');
+        animating = false;
+      }, 450);
+    });
+  });
+
+  current = n;
+  updateUI();
+}
+
+function nextSlide() { if (current < total - 1) goTo(current + 1, 1); }
+function prevSlide() { if (current > 0)         goTo(current - 1, -1); }
+
+function updateUI() {
+  // Progress bar
+  document.getElementById('progress-bar').style.width =
+    ((current + 1) / total * 100) + '%';
+
+  // Counter
+  document.getElementById('slide-counter').textContent =
+    `${current + 1} / ${total}`;
+
+  // Dots
+  document.querySelectorAll('.dot').forEach((d, i) =>
+    d.classList.toggle('active', i === current));
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault(); nextSlide();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault(); prevSlide();
+  } else if (e.key === 'Home') {
+    goTo(0);
+  } else if (e.key === 'End') {
+    goTo(total - 1);
+  } else if (e.key >= '1' && e.key <= '9') {
+    const n = parseInt(e.key) - 1;
+    if (n < total) goTo(n);
+  }
+});
+
+// Touch swipe
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) dx < 0 ? nextSlide() : prevSlide();
+});
+
+// Init
+updateUI();
+</script>
+</body>
+</html>

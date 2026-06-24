@@ -1,0 +1,9 @@
+# roadsafety_ai — AI Detection Service (Port 8001)
+# Install with: pip install -r requirements.txt
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+ultralytics>=8.1.0
+opencv-python>=4.9.0
+numpy>=1.24.0
+python-multipart>=0.0.9
